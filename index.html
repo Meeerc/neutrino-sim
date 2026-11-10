@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neutrino-Oszillation – Simulation</title>
+<meta name="description" content="Interaktive Simulation der Neutrinooszillation: drei Flavours, Materieeffekt, echte Experimente.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%230b1020'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='%2338bdf8' font-family='serif' font-style='italic'>ν</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Teilchenphysik zum Anfassen</p>
+    <h1>Neutrino-Oszillation</h1>
+    <p class="lede">Ein Neutrino wird als Elektron-, Myon- oder Tau-Neutrino erzeugt – und kommt oft als etwas anderes an.
+      Schick einen Strahl los und sieh zu, wie sich die Flavours unterwegs ineinander verwandeln.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="presets" aria-label="Experimente">
+    <span class="label">Experiment</span>
+    <div id="presets" class="chips"></div>
+  </section>
+
+  <div class="layout">
+    <aside class="panel controls">
+      <h2>Strahl</h2>
+
+      <div class="field">
+        <span class="label">Start-Flavour</span>
+        <div class="seg" id="flavor">
+          <button data-v="0"><i class="dot e"></i>Elektron</button>
+          <button data-v="1"><i class="dot m"></i>Myon</button>
+          <button data-v="2"><i class="dot t"></i>Tau</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Teilchen</span>
+        <div class="seg" id="anti">
+          <button data-v="0">Neutrino ν</button>
+          <button data-v="1">Antineutrino ν̄</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="E"><span class="label">Energie</span><output id="E_o"></output></label>
+        <input type="range" id="E" min="0" max="1000" step="1">
+      </div>
+      <div class="field">
+        <label for="L"><span class="label">Flugstrecke</span><output id="L_o"></output></label>
+        <input type="range" id="L" min="0" max="1000" step="1">
+      </div>
+      <div class="field">
+        <label for="rho"><span class="label">Materiedichte</span><output id="rho_o"></output></label>
+        <input type="range" id="rho" min="0" max="13" step="0.05">
+      </div>
+
+      <details>
+        <summary>Mischungsparameter</summary>
+        <div class="field">
+          <label for="th12"><span class="label">θ₁₂</span><output id="th12_o"></output></label>
+          <input type="range" id="th12" min="0" max="90" step="0.1">
+        </div>
+        <div class="field">
+          <label for="th23"><span class="label">θ₂₃</span><output id="th23_o"></output></label>
+          <input type="range" id="th23" min="0" max="90" step="0.1">
+        </div>
+        <div class="field">
+          <label for="th13"><span class="label">θ₁₃</span><output id="th13_o"></output></label>
+          <input type="range" id="th13" min="0" max="45" step="0.1">
+        </div>
+        <div class="field">
+          <label for="dcp"><span class="label">CP-Phase δ</span><output id="dcp_o"></output></label>
+          <input type="range" id="dcp" min="0" max="360" step="1">
+        </div>
+        <div class="field">
+          <label for="dm21"><span class="label">Δm²₂₁</span><output id="dm21_o"></output></label>
+          <input type="range" id="dm21" min="1" max="20" step="0.05">
+        </div>
+        <div class="field">
+          <label for="dm31"><span class="label">|Δm²₃₁|</span><output id="dm31_o"></output></label>
+          <input type="range" id="dm31" min="0.5" max="5" step="0.01">
+        </div>
+        <div class="field">
+          <span class="label">Massenordnung</span>
+          <div class="seg" id="inverted">
+            <button data-v="0">Normal</button>
+            <button data-v="1">Invertiert</button>
+          </div>
+        </div>
+        <button class="ghost" id="resetMix">Auf Messwerte zurücksetzen</button>
+      </details>
+    </aside>
+
+    <div class="stage">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Strahl</h2>
+          <div class="actions">
+            <button class="ghost" id="pause">Pause</button>
+            <button class="ghost" id="resetCounts">Zähler zurücksetzen</button>
+          </div>
+        </div>
+        <canvas id="beam" class="beam"></canvas>
+        <canvas id="pl" class="plot"></canvas>
+        <p class="caption">Wahrscheinlichkeit, das Neutrino an dieser Stelle der Strecke als
+          <span class="k e">ν<sub>e</sub></span>, <span class="k m">ν<sub>μ</sub></span> oder
+          <span class="k t">ν<sub>τ</sub></span> zu messen.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Am Detektor</h2>
+        <div class="readout" id="readout"></div>
+        <p class="caption" id="countNote"></p>
+      </section>
+
+      <section class="panel">
+        <h2>Energiespektrum bei dieser Flugstrecke</h2>
+        <canvas id="spec" class="plot"></canvas>
+        <p class="caption">Dieselbe Strecke, andere Energien. Die gestrichelte Linie markiert die eingestellte Energie.</p>
+      </section>
+    </div>
+  </div>
+
+  <section class="explain">
+    <h2>Was passiert hier?</h2>
+    <div class="cols">
+      <div>
+        <h3>Flavour ist nicht Masse</h3>
+        <p>Neutrinos entstehen mit einem bestimmten Flavour (e, μ, τ), fliegen aber als Überlagerung dreier
+          Massenzustände. Diese laufen leicht unterschiedlich schnell in der Phase – die Mischung verschiebt sich,
+          und mit ihr die Chance, welchen Flavour der Detektor sieht.</p>
+      </div>
+      <div>
+        <h3>L / E bestimmt den Takt</h3>
+        <p>Die Oszillation hängt vom Verhältnis Strecke zu Energie ab. Reaktorneutrinos (wenige MeV) oszillieren
+          schon nach Kilometern, Beschleunigerneutrinos (GeV) brauchen Hunderte Kilometer.</p>
+      </div>
+      <div>
+        <h3>Materie mischt mit</h3>
+        <p>In Materie spüren nur Elektron-Neutrinos die Elektronen der Umgebung. Das verändert die Oszillation –
+          unterschiedlich für Neutrinos und Antineutrinos und abhängig von der Massenordnung.</p>
+      </div>
+    </div>
+    <p class="fine">Modell: exakte Drei-Flavour-Propagation mit konstanter Materiedichte (Y<sub>e</sub> = 0,5).
+      Startwerte nach globalen Fits (NuFIT). Der Detektor zählt hier jedes Neutrino – in Wirklichkeit fliegen fast alle einfach hindurch.</p>
+  </section>
+</main>
+
+<script src="physics.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
