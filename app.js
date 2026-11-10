@@ -1,21 +1,32 @@
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const RGB = [[56, 189, 248], [244, 114, 182], [163, 230, 53]];
-  const CSS = RGB.map(c => `rgb(${c})`);
+  let RGB, CSS, T; // Farben kommen aus den CSS-Variablen (hell/dunkel)
   const SUB = ['e', 'μ', 'τ'];
   const PAD_L = 46, PAD_R = 18;
-  const DEFAULT_MIX = { th12: 33.4, th23: 49, th13: 8.6, dcp: 195, dm21: 7.4, dm31: 2.51, inverted: 0 };
-  const S = Object.assign({ flavor: 1, anti: 0, E: 0.6, L: 295, rho: 2.6 }, DEFAULT_MIX);
+  // NuFit-6.0, Tabelle 1 (IC24 mit SK-atm) [9]. Invertiert: |Δm²31| = |Δm²32| − Δm²21 = 2,484 − 0,075
+  const NUFIT = [
+    { th12: 33.68, th23: 43.3, th13: 8.56, dcp: 212, dm21: 7.49, dm31: 2.513 },
+    { th12: 33.68, th23: 47.9, th13: 8.59, dcp: 274, dm21: 7.49, dm31: 2.409 },
+  ];
+  const S = Object.assign({ flavor: 1, anti: 0, E: 0.6, L: 295, rho: 2.6, inverted: 0 }, NUFIT[0]);
+  const ref = n => `<sup class="ref"><a href="#ref${n}">[${n}]</a></sup>`;
 
   const PRESETS = [
-    { name: 'T2K', flavor: 1, anti: 0, E: 0.6, L: 295, rho: 2.6 },
-    { name: 'NOvA', flavor: 1, anti: 0, E: 2.0, L: 810, rho: 2.8 },
-    { name: 'DUNE', flavor: 1, anti: 0, E: 2.5, L: 1300, rho: 2.85 },
-    { name: 'OPERA', flavor: 1, anti: 0, E: 17, L: 730, rho: 2.8 },
-    { name: 'KamLAND', flavor: 0, anti: 1, E: 0.004, L: 180, rho: 2.6 },
-    { name: 'Daya Bay', flavor: 0, anti: 1, E: 0.004, L: 1.65, rho: 2.6 },
-    { name: 'Quer durch die Erde', flavor: 1, anti: 0, E: 5, L: 12742, rho: 8.4 },
+    { name: 'T2K', flavor: 1, anti: 0, E: 0.6, L: 295, rho: 2.6,
+      note: `J-PARC → Super-Kamiokande: 295 km, Strahlmaximum bei etwa 0,6 GeV${ref(1)}, mittlere Dichte 2,6 g/cm³${ref(2)}.` },
+    { name: 'NOvA', flavor: 1, anti: 0, E: 1.8, L: 810, rho: 2.84,
+      note: `Fermilab → Ash River: rund 810 km, Flussmaximum bei 1,8 GeV, Krustendichte 2,84 g/cm³${ref(3)}.` },
+    { name: 'DUNE', flavor: 1, anti: 0, E: 2.5, L: 1285, rho: 2.85,
+      note: `Fermilab → SURF: 1285 km, Strahlmaximum bei etwa 2,5 GeV, Dichte 2,848 g/cm³${ref(4)}.` },
+    { name: 'OPERA', flavor: 1, anti: 0, E: 17, L: 730, rho: 2.8,
+      note: `CERN → Gran Sasso: 730 km, mittlere Neutrinoenergie etwa 17 GeV${ref(5)}. Dichte 2,8 g/cm³ ist eine Annahme.` },
+    { name: 'KamLAND', flavor: 0, anti: 1, E: 0.004, L: 180, rho: 2.6,
+      note: `Reaktor-Antineutrinos, flussgewichtete mittlere Distanz 180 km${ref(6)}. 4 MeV und die Dichte sind Annahmen.` },
+    { name: 'Daya Bay', flavor: 0, anti: 1, E: 0.004, L: 1.648, rho: 2.6,
+      note: `Reaktor-Antineutrinos, flussgewichtete Distanz der fernen Halle 1648 m${ref(7)}. 4 MeV und die Dichte sind Annahmen.` },
+    { name: 'Quer durch die Erde', flavor: 1, anti: 0, E: 5, L: 12742, rho: 8.6,
+      note: `Kein Experiment: Erddurchmesser 12 742 km, mittlere Dichte nach PREM${ref(8)} etwa 8,6 g/cm³; Energie frei gewählt.` },
   ];
 
   // ---------- Slider-Skalen ----------
@@ -35,7 +46,7 @@
     th13: v => `${de(v, { minimumFractionDigits: 1 })}°`,
     dcp: v => `${v}°`,
     dm21: v => `${de(v, { minimumFractionDigits: 2 })} · 10⁻⁵ eV²`,
-    dm31: v => `${de(v, { minimumFractionDigits: 2 })} · 10⁻³ eV²`,
+    dm31: v => `${de(v, { minimumFractionDigits: 3 })} · 10⁻³ eV²`,
   };
 
   // ---------- Zustand der Simulation ----------
@@ -80,10 +91,17 @@
     for (const k in FMT) { $(k).value = S[k]; $(k + '_o').textContent = FMT[k](S[k]); }
     for (const k of ['flavor', 'anti', 'inverted'])
       for (const b of $(k).children) b.classList.toggle('on', +b.dataset.v === +S[k]);
+    markPreset();
+  }
+
+  function markPreset() {
+    let note = 'Eigene Einstellung.';
     PRESETS.forEach((p, i) => {
       const on = ['flavor', 'anti', 'E', 'L', 'rho'].every(k => Math.abs(p[k] - S[k]) < 1e-9);
       $('presets').children[i].classList.toggle('on', on);
+      if (on) note = p.note;
     });
+    $('presetNote').innerHTML = note;
   }
 
   function change() { syncUI(); recompute(); }
@@ -92,7 +110,7 @@
     PRESETS.forEach(p => {
       const b = document.createElement('button');
       b.textContent = p.name;
-      b.onclick = () => { Object.assign(S, p); delete S.name; change(); };
+      b.onclick = () => { for (const k of ['flavor', 'anti', 'E', 'L', 'rho']) S[k] = p[k]; change(); };
       $('presets').appendChild(b);
     });
     $('E').oninput = e => { S.E = sig(toLog(+e.target.value, E_MIN, E_MAX), 3); $('E_o').textContent = fmtE(S.E); softChange(); };
@@ -100,12 +118,12 @@
     for (const k in FMT) $(k).oninput = e => { S[k] = +e.target.value; softChange(); };
     for (const k of ['flavor', 'anti', 'inverted'])
       for (const b of $(k).children) b.onclick = () => { S[k] = +b.dataset.v; change(); };
-    $('resetMix').onclick = () => { Object.assign(S, DEFAULT_MIX); change(); };
+    $('resetMix').onclick = () => { Object.assign(S, NUFIT[S.inverted]); change(); };
     $('resetCounts').onclick = resetCounts;
     $('pause').onclick = () => { paused = !paused; $('pause').textContent = paused ? 'Weiter' : 'Pause'; };
 
     const rows = [0, 1, 2].map(b => `
-      <div class="row" style="--c:${CSS[b]}">
+      <div class="row ${'emt'[b]}">
         <div class="name" id="n${b}"></div>
         <div class="bars"><div class="bar"><i id="p${b}"></i></div><div class="bar count"><i id="c${b}"></i></div></div>
         <div class="pct" id="t${b}"></div>
@@ -117,10 +135,7 @@
   // Slider: Wert im <output> nicht per syncUI überschreiben (sonst springt der Regler)
   function softChange() {
     for (const k in FMT) $(k + '_o').textContent = FMT[k](S[k]);
-    PRESETS.forEach((p, i) => {
-      const on = ['flavor', 'anti', 'E', 'L', 'rho'].every(k => Math.abs(p[k] - S[k]) < 1e-9);
-      $('presets').children[i].classList.toggle('on', on);
-    });
+    markPreset();
     recompute();
   }
 
@@ -138,6 +153,15 @@
     }
     $('countNote').innerHTML = `Oberer Balken: berechnete Wahrscheinlichkeit für ${nu(S.flavor)} → ${nu(0).replace(/<sub>.*/, '')}<sub>x</sub>. ` +
       `Unterer Balken: Anteil der bisher gezählten Neutrinos (${total}) – er nähert sich mit der Zeit der Rechnung an.`;
+  }
+
+  // ---------- Farben ----------
+  function readTheme() {
+    const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+    const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+    RGB = ['--e', '--m', '--t'].map(n => hex(g(n)));
+    CSS = RGB.map(c => `rgb(${c})`);
+    T = { panel: g('--panel'), grid: g('--grid'), axis: g('--line-strong'), muted: g('--muted'), faint: g('--faint'), text: g('--text') };
   }
 
   // ---------- Canvas-Helfer ----------
@@ -185,25 +209,25 @@
     ctx.lineWidth = 1;
     ctx.textBaseline = 'middle'; ctx.textAlign = 'right';
     for (const p of [0, 0.25, 0.5, 0.75, 1]) {
-      ctx.strokeStyle = p === 0 ? '#34405f' : '#1b2440';
+      ctx.strokeStyle = p === 0 ? T.axis : T.grid;
       ctx.beginPath(); ctx.moveTo(x0, Math.round(y(p)) + .5); ctx.lineTo(x1, Math.round(y(p)) + .5); ctx.stroke();
-      ctx.fillStyle = '#8d98b5';
+      ctx.fillStyle = T.muted;
       if (p !== 0.25 && p !== 0.75) ctx.fillText(p * 100 + ' %', x0 - 8, y(p));
     }
     ctx.textBaseline = 'top'; ctx.textAlign = 'center';
     let lastRight = -1e9;
     for (const t of xTicks) {
       const x = x0 + t.f * (x1 - x0);
-      ctx.strokeStyle = '#34405f';
+      ctx.strokeStyle = T.axis;
       ctx.beginPath(); ctx.moveTo(Math.round(x) + .5, bottom); ctx.lineTo(Math.round(x) + .5, bottom + 4); ctx.stroke();
       const tw = ctx.measureText(t.label).width;
       const tx = Math.min(Math.max(x, x0 + tw / 2 - 6), x1 - tw / 2 + 6);
       if (tx - tw / 2 < lastRight + 8) continue;
-      ctx.fillStyle = '#8d98b5';
+      ctx.fillStyle = T.muted;
       ctx.fillText(t.label, tx, bottom + 7);
       lastRight = tx + tw / 2;
     }
-    ctx.fillStyle = '#6b7694';
+    ctx.fillStyle = T.faint;
     ctx.fillText(xLabel, (x0 + x1) / 2, bottom + 23);
     return { ctx, x0, x1, y, top, bottom };
   }
@@ -244,7 +268,7 @@
     g = plotFrame($('spec'), et, 'Energie (logarithmisch)');
     drawSeries(g, spec.P, spec.E.length);
     const xm = (g.x0 + g.x1) / 2;
-    g.ctx.setLineDash([4, 4]); g.ctx.strokeStyle = '#e6eaf5'; g.ctx.lineWidth = 1; g.ctx.globalAlpha = .6;
+    g.ctx.setLineDash([4, 4]); g.ctx.strokeStyle = T.text; g.ctx.lineWidth = 1; g.ctx.globalAlpha = .6;
     g.ctx.beginPath(); g.ctx.moveTo(xm, g.top); g.ctx.lineTo(xm, g.bottom); g.ctx.stroke();
     g.ctx.setLineDash([]); g.ctx.globalAlpha = 1;
   }
@@ -263,40 +287,30 @@
     ctx.font = '11.5px system-ui, sans-serif';
     ctx.textBaseline = 'middle';
     if (S.rho > 0) {
-      ctx.fillStyle = `rgba(190, 150, 110, ${0.05 + 0.012 * S.rho})`;
+      ctx.globalAlpha = 0.04 + 0.012 * S.rho;
+      ctx.fillStyle = T.muted;
       ctx.beginPath(); ctx.roundRect(x0, cy - 44, x1 - x0, 88, 8); ctx.fill();
+      ctx.globalAlpha = 1;
     }
-    ctx.fillStyle = '#6b7694'; ctx.textAlign = 'center';
+    ctx.fillStyle = T.faint; ctx.textAlign = 'center';
     ctx.fillText(S.rho > 0 ? `Materie · ${FMT.rho(S.rho)}` : 'Vakuum', (x0 + x1) / 2, cy - 31);
 
     // Flavour-Band
     ctx.save();
     ctx.beginPath(); ctx.roundRect(x0, cy - bh / 2, x1 - x0, bh, bh / 2); ctx.clip();
     ctx.imageSmoothingEnabled = true;
-    ctx.globalAlpha = .8;
     ctx.drawImage(strip, x0, cy - bh / 2, x1 - x0, bh);
-    ctx.globalAlpha = 1;
-    const sh = ctx.createLinearGradient(0, cy - bh / 2, 0, cy + bh / 2);
-    sh.addColorStop(0, 'rgba(7,10,20,.55)'); sh.addColorStop(.5, 'rgba(7,10,20,0)'); sh.addColorStop(1, 'rgba(7,10,20,.55)');
-    ctx.fillStyle = sh; ctx.fillRect(x0, cy - bh / 2, x1 - x0, bh);
     ctx.restore();
 
     // Teilchen
+    ctx.fillStyle = T.panel; ctx.strokeStyle = T.text; ctx.lineWidth = 1.25;
     for (const p of particles) {
       const f = (simT - p.t0) / FLIGHT;
-      const x = x0 + f * (x1 - x0);
-      const c = mix(Math.min(curve.n, Math.round(f * curve.n)));
-      const y = cy + p.dy;
-      const gl = ctx.createRadialGradient(x, y, 0, x, y, 11);
-      gl.addColorStop(0, 'rgba(255,255,255,.95)');
-      gl.addColorStop(.22, `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},.9)`);
-      gl.addColorStop(1, `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},0)`);
-      ctx.fillStyle = gl;
-      ctx.beginPath(); ctx.arc(x, y, 11, 0, 6.2832); ctx.fill();
+      ctx.beginPath(); ctx.arc(x0 + f * (x1 - x0), cy + p.dy, 3.2, 0, 6.2832); ctx.fill(); ctx.stroke();
     }
 
     // Quelle
-    ctx.fillStyle = '#0e1424'; ctx.strokeStyle = CSS[S.flavor]; ctx.lineWidth = 2;
+    ctx.fillStyle = T.panel; ctx.strokeStyle = CSS[S.flavor]; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(x0, cy, 17, 0, 6.2832); ctx.fill(); ctx.stroke();
     ctx.fillStyle = CSS[S.flavor]; ctx.textAlign = 'center';
     ctx.font = 'italic 600 15px Georgia, serif';
@@ -306,21 +320,20 @@
 
     // Detektor
     const a = flash ? Math.max(0, 1 - (simT - flash.t) / 350) : 0;
-    ctx.fillStyle = '#0e1424';
+    ctx.fillStyle = T.panel;
     ctx.beginPath(); ctx.roundRect(x1 - 13, cy - 26, 26, 52, 6); ctx.fill();
     if (a > 0) {
       ctx.globalAlpha = a; ctx.fillStyle = CSS[flash.b];
-      ctx.shadowColor = CSS[flash.b]; ctx.shadowBlur = 18;
       ctx.beginPath(); ctx.roundRect(x1 - 13, cy - 26, 26, 52, 6); ctx.fill();
-      ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+      ctx.globalAlpha = 1;
     }
-    ctx.strokeStyle = '#8d98b5'; ctx.lineWidth = 1.5;
+    ctx.strokeStyle = T.muted; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.roundRect(x1 - 13, cy - 26, 26, 52, 6); ctx.stroke();
 
-    ctx.font = '11.5px system-ui, sans-serif'; ctx.fillStyle = '#8d98b5';
+    ctx.font = '11.5px system-ui, sans-serif'; ctx.fillStyle = T.muted;
     ctx.textAlign = 'left'; ctx.fillText('Quelle', x0 - 20, cy + 52);
     ctx.textAlign = 'right'; ctx.fillText('Detektor', x1 + 14, cy + 52);
-    ctx.textAlign = 'center'; ctx.fillStyle = '#6b7694';
+    ctx.textAlign = 'center'; ctx.fillStyle = T.faint;
     ctx.fillText(`${fmtL(S.L)} · ${fmtE(S.E)}`, (x0 + x1) / 2, cy + 52);
   }
 
@@ -345,9 +358,11 @@
     requestAnimationFrame(frame);
   }
 
+  readTheme();
   initUI();
   syncUI();
   recompute();
   window.addEventListener('resize', drawPlots);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readTheme(); buildStrip(); drawPlots(); });
   requestAnimationFrame(t => { lastFrame = t; frame(t); });
 })();

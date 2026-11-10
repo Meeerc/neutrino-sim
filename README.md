@@ -4,6 +4,8 @@ Interaktive Web-App zur Neutrinooszillation: drei Flavours, Materieeffekt, Vorei
 
 **Live:** https://meeerc.github.io/neutrino-sim/
 
+Parameter der Experimente und Literaturangaben stehen auf der Seite unter «Experimente und Quellen».
+
 - `physics.js` – exakte Drei-Flavour-Propagation (PMNS-Matrix, konstante Materiedichte) über das Matrixexponential des Hamilton-Operators
 - `app.js` – Bedienung, Strahl-Animation und Diagramme (Canvas)
 - keine Abhängigkeiten, kein Build: `index.html` im Browser öffnen genügt

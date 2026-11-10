@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Neutrino-Oszillation – Simulation</title>
 <meta name="description" content="Interaktive Simulation der Neutrinooszillation: drei Flavours, Materieeffekt, echte Experimente.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%230b1020'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='%2338bdf8' font-family='serif' font-style='italic'>ν</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%231f1f1f'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='%23ececea' font-family='serif' font-style='italic'>ν</text></svg>">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,6 +23,7 @@
     <span class="label">Experiment</span>
     <div id="presets" class="chips"></div>
   </section>
+  <p class="preset-note" id="presetNote"></p>
 
   <div class="layout">
     <aside class="panel controls">
@@ -55,14 +56,14 @@
       </div>
       <div class="field">
         <label for="rho"><span class="label">Materiedichte</span><output id="rho_o"></output></label>
-        <input type="range" id="rho" min="0" max="13" step="0.05">
+        <input type="range" id="rho" min="0" max="13" step="0.01">
       </div>
 
       <details>
         <summary>Mischungsparameter</summary>
         <div class="field">
           <label for="th12"><span class="label">θ₁₂</span><output id="th12_o"></output></label>
-          <input type="range" id="th12" min="0" max="90" step="0.1">
+          <input type="range" id="th12" min="0" max="90" step="0.01">
         </div>
         <div class="field">
           <label for="th23"><span class="label">θ₂₃</span><output id="th23_o"></output></label>
@@ -70,7 +71,7 @@
         </div>
         <div class="field">
           <label for="th13"><span class="label">θ₁₃</span><output id="th13_o"></output></label>
-          <input type="range" id="th13" min="0" max="45" step="0.1">
+          <input type="range" id="th13" min="0" max="45" step="0.01">
         </div>
         <div class="field">
           <label for="dcp"><span class="label">CP-Phase δ</span><output id="dcp_o"></output></label>
@@ -78,11 +79,11 @@
         </div>
         <div class="field">
           <label for="dm21"><span class="label">Δm²₂₁</span><output id="dm21_o"></output></label>
-          <input type="range" id="dm21" min="1" max="20" step="0.05">
+          <input type="range" id="dm21" min="1" max="20" step="0.01">
         </div>
         <div class="field">
           <label for="dm31"><span class="label">|Δm²₃₁|</span><output id="dm31_o"></output></label>
-          <input type="range" id="dm31" min="0.5" max="5" step="0.01">
+          <input type="range" id="dm31" min="0.5" max="5" step="0.001">
         </div>
         <div class="field">
           <span class="label">Massenordnung</span>
@@ -91,7 +92,7 @@
             <button data-v="1">Invertiert</button>
           </div>
         </div>
-        <button class="ghost" id="resetMix">Auf Messwerte zurücksetzen</button>
+        <button class="ghost" id="resetMix">Auf NuFit-6.0-Werte zurücksetzen</button>
       </details>
     </aside>
 
@@ -146,7 +147,47 @@
       </div>
     </div>
     <p class="fine">Modell: exakte Drei-Flavour-Propagation mit konstanter Materiedichte (Y<sub>e</sub> = 0,5).
-      Startwerte nach globalen Fits (NuFIT). Der Detektor zählt hier jedes Neutrino – in Wirklichkeit fliegen fast alle einfach hindurch.</p>
+      Der Detektor zählt hier jedes Neutrino – in Wirklichkeit fliegen fast alle einfach hindurch.</p>
+  </section>
+
+  <section class="sources" id="quellen">
+    <h2>Experimente und Quellen</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Experiment</th><th>Strecke</th><th>Energie</th><th>Dichte</th><th>Beleg</th></tr></thead>
+        <tbody>
+          <tr><td>T2K</td><td class="num">295 km</td><td class="num">0,6 GeV</td><td class="num">2,6 g/cm³</td>
+            <td class="why">Strecke und Strahlmaximum (Off-Axis-Winkel 2,5°) aus <a href="#ref1">[1]</a>; mittlere Dichte entlang der Strecke aus <a href="#ref2">[2]</a>.</td></tr>
+          <tr><td>NOvA</td><td class="num">810 km</td><td class="num">1,8 GeV</td><td class="num">2,84 g/cm³</td>
+            <td class="why">Strecke, Flussmaximum (14,6 mrad Off-Axis) und Krustendichte aus <a href="#ref3">[3]</a>.</td></tr>
+          <tr><td>DUNE</td><td class="num">1285 km</td><td class="num">2,5 GeV</td><td class="num">2,85 g/cm³</td>
+            <td class="why">Strecke, Strahlmaximum und Dichte (2,848 g/cm³) aus <a href="#ref4">[4]</a>.</td></tr>
+          <tr><td>OPERA</td><td class="num">730 km</td><td class="num">17 GeV</td><td class="num">2,8 g/cm³</td>
+            <td class="why">Strecke und mittlere Neutrinoenergie aus <a href="#ref5">[5]</a>. Die Dichte ist eine Annahme (typische Erdkruste), nicht aus der Quelle.</td></tr>
+          <tr><td>KamLAND</td><td class="num">180 km</td><td class="num">4 MeV</td><td class="num">2,6 g/cm³</td>
+            <td class="why">Flussgewichtete mittlere Reaktordistanz aus <a href="#ref6">[6]</a>. 4 MeV ist ein gewählter typischer Wert im Reaktorspektrum (Nachweisschwelle 1,8 MeV <a href="#ref6">[6]</a>); die Dichte ist eine Annahme und spielt hier kaum eine Rolle.</td></tr>
+          <tr><td>Daya Bay</td><td class="num">1,648 km</td><td class="num">4 MeV</td><td class="num">2,6 g/cm³</td>
+            <td class="why">Flussgewichtete Distanz der fernen Halle aus <a href="#ref7">[7]</a>. Energie und Dichte wie bei KamLAND gewählt.</td></tr>
+          <tr><td>Quer durch die Erde</td><td class="num">12 742 km</td><td class="num">5 GeV</td><td class="num">8,6 g/cm³</td>
+            <td class="why">Kein Experiment. Durchmesser 2 × 6371 km; die Dichte ist das Mittel des PREM-Dichteprofils <a href="#ref8">[8]</a> entlang des Durchmessers (eigene Rechnung). Die Energie ist frei gewählt, und eine konstante Dichte ist für Kern und Mantel nur eine grobe Näherung.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fine">Die Mischungsparameter starten mit den Bestwerten aus NuFit-6.0 <a href="#ref9">[9]</a>
+      (Tabelle 1, Datensatz «IC24 mit SK-atm»): θ₁₂ = 33,68°, θ₂₃ = 43,3°, θ₁₃ = 8,56°, δ = 212°,
+      Δm²₂₁ = 7,49 · 10⁻⁵ eV², Δm²₃₁ = 2,513 · 10⁻³ eV² (normale Ordnung). Für die invertierte Ordnung setzt der
+      Zurücksetzen-Knopf θ₂₃ = 47,9°, θ₁₃ = 8,59°, δ = 274° und |Δm²₃₁| = 2,409 · 10⁻³ eV² (aus Δm²₃₂ = −2,484 · 10⁻³ eV²).</p>
+    <ol class="refs">
+      <li id="ref1">K. Abe et al. (T2K Collaboration), «The T2K Experiment», Nucl. Instrum. Meth. A 659 (2011) 106. <a href="https://arxiv.org/abs/1106.1238">arXiv:1106.1238</a></li>
+      <li id="ref2">K. Hagiwara, N. Okamura, K. Senda, «The earth matter effects in neutrino oscillation experiments from Tokai to Kamioka and Korea», JHEP 09 (2011) 082. <a href="https://arxiv.org/abs/1107.5857">arXiv:1107.5857</a></li>
+      <li id="ref3">M. A. Acero et al. (NOvA Collaboration), «Improved measurement of neutrino oscillation parameters by the NOvA experiment», Phys. Rev. D 106 (2022) 032004. <a href="https://arxiv.org/abs/2108.08219">arXiv:2108.08219</a></li>
+      <li id="ref4">B. Abi et al. (DUNE Collaboration), «Long-baseline neutrino oscillation physics potential of the DUNE experiment», Eur. Phys. J. C 80 (2020) 978. <a href="https://arxiv.org/abs/2006.16043">arXiv:2006.16043</a></li>
+      <li id="ref5">N. Agafonova et al. (OPERA Collaboration), «Final Results of the OPERA Experiment on ν<sub>τ</sub> Appearance in the CNGS Neutrino Beam», Phys. Rev. Lett. 120 (2018) 211801. <a href="https://arxiv.org/abs/1804.04912">arXiv:1804.04912</a></li>
+      <li id="ref6">S. Abe et al. (KamLAND Collaboration), «Precision Measurement of Neutrino Oscillation Parameters with KamLAND», Phys. Rev. Lett. 100 (2008) 221803. <a href="https://arxiv.org/abs/0801.4589">arXiv:0801.4589</a></li>
+      <li id="ref7">F. P. An et al. (Daya Bay Collaboration), «Observation of Electron-Antineutrino Disappearance at Daya Bay», Phys. Rev. Lett. 108 (2012) 171803. <a href="https://arxiv.org/abs/1203.1669">arXiv:1203.1669</a></li>
+      <li id="ref8">A. M. Dziewonski, D. L. Anderson, «Preliminary reference Earth model», Phys. Earth Planet. Inter. 25 (1981) 297–356. <a href="https://doi.org/10.1016/0031-9201(81)90046-7">doi:10.1016/0031-9201(81)90046-7</a></li>
+      <li id="ref9">I. Esteban, M. C. Gonzalez-Garcia, M. Maltoni, I. Martinez-Soler, J. P. Pinheiro, T. Schwetz, «NuFit-6.0: updated global analysis of three-flavor neutrino oscillations», JHEP 12 (2024) 216. <a href="https://arxiv.org/abs/2410.05380">arXiv:2410.05380</a></li>
+    </ol>
   </section>
 </main>
 
