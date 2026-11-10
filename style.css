@@ -11,9 +11,9 @@
   --faint: #8a8a86;
   --on: #1c1c1b;
   --on-text: #ffffff;
-  --e: #4f7396;
-  --m: #a85a44;
-  --t: #7c8238;
+  --e: #0072b2;
+  --m: #d55e00;
+  --t: #009e73;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -28,9 +28,9 @@
     --faint: #7d7d7a;
     --on: #ececea;
     --on-text: #161616;
-    --e: #84a8cc;
-    --m: #d39079;
-    --t: #b4ba6c;
+    --e: #56a8e0;
+    --m: #f08a3c;
+    --t: #2dbe8d;
   }
 }
 * { box-sizing: border-box; }
@@ -132,7 +132,38 @@ td.why { color: var(--muted); }
 .refs li { margin-bottom: 6px; padding-left: 4px; }
 .refs li:target { color: var(--text); }
 
+.legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 4px; padding: 0; font-size: 13px; color: var(--muted); }
+.legend li { display: flex; align-items: center; gap: 7px; }
+.legend .line { width: 18px; height: 3px; border-radius: 2px; background: var(--c); }
+.legend.big { margin: 18px 0 0; font-size: 14.5px; color: var(--text); gap: 8px 26px; }
+.legend.big .dot { width: 12px; height: 12px; }
+.legend.big span { color: var(--c); font-weight: 700; }
+
+.steps { list-style: none; counter-reset: s; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 4px 0 22px; padding: 0; }
+.steps li { counter-increment: s; position: relative; padding: 12px 14px 12px 50px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--muted); font-size: 13.5px; }
+.steps li::before, .step {
+  content: counter(s); display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--on); color: var(--on-text); font-size: 13px; font-weight: 700; letter-spacing: 0;
+}
+.steps li::before { position: absolute; left: 14px; top: 12px; }
+.steps b { display: block; color: var(--text); font-size: 15px; }
+.step { margin-right: 9px; vertical-align: -1px; }
+
+.hint { margin: 4px 0 0; color: var(--faint); font-size: 12px; line-height: 1.4; }
+.hint.intro { margin: -4px 0 14px; }
+
+.result .headline { margin: 0 0 14px; font-size: clamp(17px, 2.2vw, 21px); line-height: 1.4; font-weight: 600; text-wrap: pretty; }
+.stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--panel-2); gap: 2px; }
+.stack i { display: block; background: var(--c); min-width: 0; transition: width .15s; }
+
+.preset-note b { color: var(--text); font-weight: 600; }
+.try-head { margin-top: 30px; }
+.try { margin: 0; padding-left: 20px; color: var(--muted); max-width: 90ch; }
+.try li { margin-bottom: 8px; }
+.try b { color: var(--text); }
+
 @media (max-width: 860px) {
+  .steps { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .layout { grid-template-columns: minmax(0, 1fr); }
   .controls { position: static; }
   .cols { grid-template-columns: minmax(0, 1fr); gap: 16px; }

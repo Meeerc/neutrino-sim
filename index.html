@@ -11,23 +11,34 @@
 <body>
 <header>
   <div class="wrap">
-    <p class="eyebrow">Teilchenphysik zum Anfassen</p>
+    <p class="eyebrow">Interaktive Simulation</p>
     <h1>Neutrino-Oszillation</h1>
-    <p class="lede">Ein Neutrino wird als Elektron-, Myon- oder Tau-Neutrino erzeugt – und kommt oft als etwas anderes an.
-      Schick einen Strahl los und sieh zu, wie sich die Flavours unterwegs ineinander verwandeln.</p>
+    <p class="lede">Neutrinos gibt es in drei Sorten («Flavours»). Auf dem Flug von der Quelle zum Detektor
+      wechseln sie die Sorte – wie stark, hängt von Flugstrecke und Energie ab.</p>
+    <ul class="legend big" aria-label="Die drei Flavours">
+      <li class="e"><i class="dot"></i>Elektron-Neutrino <span>ν<sub>e</sub></span></li>
+      <li class="m"><i class="dot"></i>Myon-Neutrino <span>ν<sub>μ</sub></span></li>
+      <li class="t"><i class="dot"></i>Tau-Neutrino <span>ν<sub>τ</sub></span></li>
+    </ul>
   </div>
 </header>
 
 <main class="wrap">
+  <ol class="steps" aria-label="So liest du die Simulation">
+    <li><b>Quelle</b> Sie erzeugt Neutrinos eines einzigen Flavours. Du wählst, welchen.</li>
+    <li><b>Flug</b> Unterwegs verschiebt sich die Mischung. Die Farbe des Bands zeigt, was das Neutrino gerade «ist».</li>
+    <li><b>Detektor</b> Er misst jedes Neutrino als genau einen Flavour. Welchen, entscheidet der Zufall – mit den berechneten Wahrscheinlichkeiten.</li>
+  </ol>
+
   <section class="presets" aria-label="Experimente">
-    <span class="label">Experiment</span>
+    <span class="label">Experiment wählen</span>
     <div id="presets" class="chips"></div>
   </section>
   <p class="preset-note" id="presetNote"></p>
 
   <div class="layout">
     <aside class="panel controls">
-      <h2>Strahl</h2>
+      <h2><span class="step">1</span>Quelle einstellen</h2>
 
       <div class="field">
         <span class="label">Start-Flavour</span>
@@ -49,18 +60,23 @@
       <div class="field">
         <label for="E"><span class="label">Energie</span><output id="E_o"></output></label>
         <input type="range" id="E" min="0" max="1000" step="1">
+        <p class="hint">Mehr Energie: die Oszillation wird langsamer.</p>
       </div>
       <div class="field">
         <label for="L"><span class="label">Flugstrecke</span><output id="L_o"></output></label>
         <input type="range" id="L" min="0" max="1000" step="1">
+        <p class="hint">Längere Strecke: mehr Schwingungen bis zum Detektor.</p>
       </div>
       <div class="field">
         <label for="rho"><span class="label">Materiedichte</span><output id="rho_o"></output></label>
         <input type="range" id="rho" min="0" max="13" step="0.01">
+        <p class="hint">0 = Vakuum, Gestein ≈ 2,6–3, Erdkern ≈ 10–13 g/cm³.</p>
       </div>
 
       <details>
         <summary>Mischungsparameter</summary>
+        <p class="hint intro">Naturkonstanten der Oszillation: Die Winkel θ legen fest, wie stark sich die Flavours mischen,
+          die Δm² wie schnell. δ unterscheidet Neutrinos von Antineutrinos.</p>
         <div class="field">
           <label for="th12"><span class="label">θ₁₂</span><output id="th12_o"></output></label>
           <input type="range" id="th12" min="0" max="90" step="0.01">
@@ -97,56 +113,78 @@
     </aside>
 
     <div class="stage">
+      <section class="panel result" aria-live="polite">
+        <h2>Ergebnis bei dieser Einstellung</h2>
+        <p class="headline" id="headline"></p>
+        <div class="stack" id="stack"><i class="e"></i><i class="m"></i><i class="t"></i></div>
+      </section>
+
       <section class="panel">
         <div class="panel-head">
-          <h2>Strahl</h2>
+          <h2><span class="step">2</span>Flug: wie sich die Mischung verändert</h2>
           <div class="actions">
             <button class="ghost" id="pause">Pause</button>
             <button class="ghost" id="resetCounts">Zähler zurücksetzen</button>
           </div>
         </div>
         <canvas id="beam" class="beam"></canvas>
+        <p class="caption">Die Punkte sind einzelne Neutrinos. Das Band zeigt ihre Flavour-Mischung als Farbe –
+          die Kurven darunter zeigen dasselbe in Zahlen.</p>
+        <ul class="legend" id="legend"></ul>
         <canvas id="pl" class="plot"></canvas>
-        <p class="caption">Wahrscheinlichkeit, das Neutrino an dieser Stelle der Strecke als
-          <span class="k e">ν<sub>e</sub></span>, <span class="k m">ν<sub>μ</sub></span> oder
-          <span class="k t">ν<sub>τ</sub></span> zu messen.</p>
+        <p class="caption">Höhe der Kurve = Wahrscheinlichkeit, das Neutrino an dieser Stelle als diesen Flavour zu messen.
+          Ganz links ist es sicher der Start-Flavour, ganz rechts steht der Detektor.</p>
       </section>
 
       <section class="panel">
-        <h2>Am Detektor</h2>
+        <h2><span class="step">3</span>Detektor: was gemessen wird</h2>
         <div class="readout" id="readout"></div>
         <p class="caption" id="countNote"></p>
       </section>
 
       <section class="panel">
-        <h2>Energiespektrum bei dieser Flugstrecke</h2>
+        <h2>Und bei anderer Energie?</h2>
         <canvas id="spec" class="plot"></canvas>
-        <p class="caption">Dieselbe Strecke, andere Energien. Die gestrichelte Linie markiert die eingestellte Energie.</p>
+        <p class="caption">Gleiche Flugstrecke, aber andere Energien: So sähe das Ergebnis am Detektor aus.
+          Die gestrichelte Linie ist die eingestellte Energie. Echte Strahlen enthalten immer einen ganzen Energiebereich.</p>
       </section>
     </div>
   </div>
 
   <section class="explain">
-    <h2>Was passiert hier?</h2>
+    <h2>Kurz erklärt</h2>
     <div class="cols">
       <div>
-        <h3>Flavour ist nicht Masse</h3>
-        <p>Neutrinos entstehen mit einem bestimmten Flavour (e, μ, τ), fliegen aber als Überlagerung dreier
-          Massenzustände. Diese laufen leicht unterschiedlich schnell in der Phase – die Mischung verschiebt sich,
-          und mit ihr die Chance, welchen Flavour der Detektor sieht.</p>
+        <h3>Warum wechseln Neutrinos die Sorte?</h3>
+        <p>Ein Neutrino mit festem Flavour ist eine Mischung aus drei Zuständen mit leicht verschiedenen Massen.
+          Diese drei Anteile geraten unterwegs aus dem Takt. Dadurch ändert sich, als welcher Flavour das Neutrino
+          beim Messen erscheint – und nach einer Weile kehrt das Muster zurück. Deshalb «Oszillation».</p>
       </div>
       <div>
-        <h3>L / E bestimmt den Takt</h3>
-        <p>Die Oszillation hängt vom Verhältnis Strecke zu Energie ab. Reaktorneutrinos (wenige MeV) oszillieren
-          schon nach Kilometern, Beschleunigerneutrinos (GeV) brauchen Hunderte Kilometer.</p>
+        <h3>Was bestimmt das Tempo?</h3>
+        <p>Das Verhältnis von Flugstrecke zu Energie. Reaktor-Neutrinos (wenige MeV) oszillieren schon nach
+          Kilometern, Neutrinos aus Beschleunigern (GeV) erst nach Hunderten Kilometern. Experimente stellen ihren
+          Detektor dorthin, wo der Effekt am grössten ist.</p>
       </div>
       <div>
-        <h3>Materie mischt mit</h3>
-        <p>In Materie spüren nur Elektron-Neutrinos die Elektronen der Umgebung. Das verändert die Oszillation –
-          unterschiedlich für Neutrinos und Antineutrinos und abhängig von der Massenordnung.</p>
+        <h3>Was ändert Materie?</h3>
+        <p>Gestein enthält Elektronen, und nur Elektron-Neutrinos spüren sie. Das verschiebt die Oszillation –
+          für Neutrinos anders als für Antineutrinos. Auf langen Strecken durch die Erde wird der Effekt messbar.</p>
       </div>
     </div>
-    <p class="fine">Modell: exakte Drei-Flavour-Propagation mit konstanter Materiedichte (Y<sub>e</sub> = 0,5).
+
+    <h2 class="try-head">Zum Ausprobieren</h2>
+    <ul class="try">
+      <li><b>T2K</b> wählen und die Energie langsam auf 1 GeV schieben: Statt fast keinem kommt wieder mehr als
+        jedes dritte Neutrino als Myon-Neutrino an. Der Detektor steht nicht mehr im Minimum.</li>
+      <li><b>KamLAND</b> wählen: In der Kurve liegen zwei Schwingungen übereinander – eine langsame, grosse und
+        eine schnelle, kleine. Sie gehören zu den zwei verschiedenen Massenunterschieden.</li>
+      <li><b>DUNE</b> wählen und auf Antineutrino umschalten: Der Elektron-Anteil am Detektor fällt von rund 7 %
+        auf 2 %. Aus solchen Unterschieden wollen Experimente die Massenordnung und die CP-Phase bestimmen.</li>
+      <li><b>Quer durch die Erde</b> wählen und die Materiedichte auf 0 stellen: Das Ergebnis ändert sich deutlich.
+        So stark wirkt Materie auf langen Strecken.</li>
+    </ul>
+    <p class="fine">Modell: exakte Drei-Flavour-Rechnung mit konstanter Materiedichte (Y<sub>e</sub> = 0,5).
       Der Detektor zählt hier jedes Neutrino – in Wirklichkeit fliegen fast alle einfach hindurch.</p>
   </section>
 

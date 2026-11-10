@@ -14,18 +14,25 @@
 
   const PRESETS = [
     { name: 'T2K', flavor: 1, anti: 0, E: 0.6, L: 295, rho: 2.6,
+      see: 'Fast alle Myon-Neutrinos sind am Detektor verschwunden: Er steht genau im ersten Minimum der Oszillation.',
       note: `J-PARC → Super-Kamiokande: 295 km, Strahlmaximum bei etwa 0,6 GeV${ref(1)}, mittlere Dichte 2,6 g/cm³${ref(2)}.` },
     { name: 'NOvA', flavor: 1, anti: 0, E: 1.8, L: 810, rho: 2.84,
+      see: 'Der Detektor steht nahe am ersten Minimum. Die lange Strecke durch Gestein macht den Materieeffekt sichtbar.',
       note: `Fermilab → Ash River: rund 810 km, Flussmaximum bei 1,8 GeV, Krustendichte 2,84 g/cm³${ref(3)}.` },
     { name: 'DUNE', flavor: 1, anti: 0, E: 2.5, L: 1285, rho: 2.85,
+      see: 'Noch längere Strecke: Hier unterscheiden sich Neutrinos und Antineutrinos am Detektor deutlich.',
       note: `Fermilab → SURF: 1285 km, Strahlmaximum bei etwa 2,5 GeV, Dichte 2,848 g/cm³${ref(4)}.` },
     { name: 'OPERA', flavor: 1, anti: 0, E: 17, L: 730, rho: 2.8,
+      see: 'Hohe Energie, darum kaum Oszillation: Nur rund 2 % werden zu Tau-Neutrinos – genau diese hat OPERA gesucht.',
       note: `CERN → Gran Sasso: 730 km, mittlere Neutrinoenergie etwa 17 GeV${ref(5)}. Dichte 2,8 g/cm³ ist eine Annahme.` },
     { name: 'KamLAND', flavor: 0, anti: 1, E: 0.004, L: 180, rho: 2.6,
+      see: 'Über 180 km wirkt die langsame Schwingung: Nur etwa ein Viertel kommt noch als Elektron-Antineutrino an.',
       note: `Reaktor-Antineutrinos, flussgewichtete mittlere Distanz 180 km${ref(6)}. 4 MeV und die Dichte sind Annahmen.` },
     { name: 'Daya Bay', flavor: 0, anti: 1, E: 0.004, L: 1.648, rho: 2.6,
+      see: 'Nur 1,6 km: Die schnelle Schwingung lässt rund 8 % der Elektron-Antineutrinos verschwinden.',
       note: `Reaktor-Antineutrinos, flussgewichtete Distanz der fernen Halle 1648 m${ref(7)}. 4 MeV und die Dichte sind Annahmen.` },
     { name: 'Quer durch die Erde', flavor: 1, anti: 0, E: 5, L: 12742, rho: 8.6,
+      see: 'Viele Schwingungen in dichter Materie: Das Muster ist deutlich komplizierter als in den Experimenten.',
       note: `Kein Experiment: Erddurchmesser 12 742 km, mittlere Dichte nach PREM${ref(8)} etwa 8,6 g/cm³; Energie frei gewählt.` },
   ];
 
@@ -69,6 +76,7 @@
     curve = Nu.curve(p, S.flavor, S.E, S.L, S.rho);
     spec = Nu.spectrum(p, S.flavor, S.L, S.rho, S.E / 10, S.E * 10, 480);
     pDet = curve.P.map(a => a[curve.n]);
+    updateHeadline();
     buildStrip();
     resetCounts();
     drawPlots();
@@ -95,11 +103,11 @@
   }
 
   function markPreset() {
-    let note = 'Eigene Einstellung.';
+    let note = 'Eigene Einstellung – wähle ein Experiment, um mit echten Werten zu starten.';
     PRESETS.forEach((p, i) => {
       const on = ['flavor', 'anti', 'E', 'L', 'rho'].every(k => Math.abs(p[k] - S[k]) < 1e-9);
       $('presets').children[i].classList.toggle('on', on);
-      if (on) note = p.note;
+      if (on) note = `<b>${p.see}</b> <span>${p.note}</span>`;
     });
     $('presetNote').innerHTML = note;
   }
@@ -130,6 +138,7 @@
         <div class="cnt" id="k${b}"></div>
       </div>`).join('');
     $('readout').innerHTML = rows;
+    $('legend').innerHTML = [0, 1, 2].map(b => `<li class="${'emt'[b]}"><i class="line"></i><span id="lg${b}"></span></li>`).join('');
   }
 
   // Slider: Wert im <output> nicht per syncUI überschreiben (sonst springt der Regler)
@@ -137,6 +146,26 @@
     for (const k in FMT) $(k + '_o').textContent = FMT[k](S[k]);
     markPreset();
     recompute();
+  }
+
+  const NAME = ['Elektron', 'Myon', 'Tau'];
+
+  // Ergebnis in einem Satz: «Von 100 … kommen etwa …»
+  function updateHeadline() {
+    const kind = S.anti ? 'Antineutrino' : 'Neutrino';
+    const raw = pDet.map(p => p * 100), n = raw.map(Math.floor);
+    const rest = [0, 1, 2].sort((a, b) => (raw[b] - n[b]) - (raw[a] - n[a]));
+    for (let i = 0; n[0] + n[1] + n[2] < 100; i++) n[rest[i % 3]]++;
+    const parts = [0, 1, 2].filter(b => n[b] > 0).sort((a, b) => n[b] - n[a])
+      .map(b => `<span class="k ${'emt'[b]}">${n[b]} als ${NAME[b]}-${kind}</span>`);
+    const list = parts.length > 1 ? parts.slice(0, -1).join(', ') + ' und ' + parts[parts.length - 1] : parts[0];
+    const top = n.indexOf(Math.max(...n));
+    const verdict = n[S.flavor] >= 99 ? 'Auf dieser Strecke passiert also praktisch nichts.'
+      : top === S.flavor ? 'Die meisten sind geblieben, was sie waren.'
+      : `Die meisten haben sich in ${NAME[top]}-${kind}s verwandelt.`;
+    $('headline').innerHTML = `Von 100 ${NAME[S.flavor]}-${kind}s kommen nach ${fmtL(S.L)} etwa ${list} an. ${verdict}`;
+    [...$('stack').children].forEach((el, b) => { el.style.width = raw[b] + '%'; });
+    for (let b = 0; b < 3; b++) $('lg' + b).innerHTML = `${NAME[b]}-${kind} ${nu(b)}`;
   }
 
   function updateReadout() {
@@ -151,8 +180,8 @@
         ? `${counts[b]} gezählt · ${de(share * 100, { maximumFractionDigits: 0 })} %`
         : '–';
     }
-    $('countNote').innerHTML = `Oberer Balken: berechnete Wahrscheinlichkeit für ${nu(S.flavor)} → ${nu(0).replace(/<sub>.*/, '')}<sub>x</sub>. ` +
-      `Unterer Balken: Anteil der bisher gezählten Neutrinos (${total}) – er nähert sich mit der Zeit der Rechnung an.`;
+    $('countNote').innerHTML = `Dicker Balken: berechnete Wahrscheinlichkeit. Dünner Balken: Anteil der bisher gezählten ` +
+      `Neutrinos (${total}). Am Anfang schwankt er zufällig, mit mehr Neutrinos nähert er sich der Rechnung an.`;
   }
 
   // ---------- Farben ----------
